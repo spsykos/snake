@@ -5,6 +5,10 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
+#define SPEED 0.05;
+
+void readKeyboard(GLFWwindow *window, float *x_direction, float *y_direction);
+
 static char* GetShaderSource(const char* fileName)
 {
     FILE *fp;
@@ -109,15 +113,23 @@ int main()
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 2, (void *) 0);
     glEnableVertexAttribArray(0);
 
+    float x_dir = 0.0f, y_dir = 0.0f;
+
         while(!glfwWindowShouldClose(window)) {
         glClearColor(0.9451, 0.9451, 0.9451, 1.0);
         glClear(GL_COLOR_BUFFER_BIT);
+
+        readKeyboard(window, &x_dir, &y_dir);
 
         GLenum err = glGetError();
         if (err != GL_NO_ERROR) {
             printf("OpenGL error: %d\n", err);
             break;
         }
+
+        glUniform1f(glGetUniformLocation(shader, "x_dir"), x_dir);
+        glUniform1f(glGetUniformLocation(shader, "y_dir"), y_dir);
+
         // draw
         glBindVertexArray(VAO);
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
@@ -130,4 +142,20 @@ int main()
 
     glfwTerminate();
     return 0;
+}
+
+void readKeyboard(GLFWwindow *window, float *x_direction, float *y_direction)
+{
+    if(glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {
+        *y_direction += SPEED;
+    }
+    if(glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) {
+        *y_direction -= SPEED;
+    }
+    if(glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {
+        *x_direction -= SPEED;
+    }
+    if(glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) {
+        *x_direction += SPEED;
+    }
 }
