@@ -1,6 +1,8 @@
 #ifndef SNAKEOBJECT_H
 #define SNAKEOBJECT_H
 
+#include <stdio.h>
+
 enum {
     DEAD = 0,
     ALIVE = 1
@@ -17,6 +19,6 @@ typedef struct node {
     Vec2 pos;
 } snakePart;
 
-snakePart* createSnake(Vec2 pos);
+snakePart* createSnake(const size_t width, const size_t height);
 
 #endif // SNAKEOBJECT_H

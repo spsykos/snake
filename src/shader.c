@@ -53,3 +53,7 @@ void Bind(ShaderProgram *sh) {
 void Unbind() {
     glUseProgram(0);
 }
+
+void SetUniformMat4f(unsigned int id, char* name, const mat4 *proj) {
+    glUniformMatrix4fv(glGetUniformLocation(id, name), 1, GL_FALSE, proj[0][0]);
+}

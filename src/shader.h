@@ -6,6 +6,7 @@
 #include <string.h>
 
 #include <glad/glad.h>
+#include <cglm/cglm.h>
 
 typedef struct ShaderProgram {
     unsigned int m_programID;
@@ -16,6 +17,7 @@ unsigned int CompileShader(unsigned int type, char* src);
 void CreateShader(ShaderProgram *sh, char* vShader, char* fShader);
 void Bind(ShaderProgram *sh);
 void Unbind();
+void SetUniformMat4f(unsigned int id, char* name, const mat4 *proj);
 
 
 #endif // SHADER_H
