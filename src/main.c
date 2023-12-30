@@ -5,60 +5,12 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
+#include "VBuffer.h"
+#include "shader.h"
+
 #define SPEED 0.05;
 
 void readKeyboard(GLFWwindow *window, float *x_direction, float *y_direction);
-
-static char* GetShaderSource(const char* fileName)
-{
-    FILE *fp;
-    long size = 0;
-    char* shaderContent;
-    
-    /* Read File to get size */
-    fp = fopen(fileName, "rb");
-    if(fp == NULL) {
-        return "";
-    }
-    fseek(fp, 0L, SEEK_END);
-    size = ftell(fp)+1;
-    fclose(fp);
-
-    /* Read File for Content */
-    fp = fopen(fileName, "r");
-    shaderContent = memset(malloc(size), '\0', size);
-    fread(shaderContent, 1, size-1, fp);
-    fclose(fp);
-
-    return shaderContent;
-}
-
-static unsigned int CompileShader(unsigned int type, char* src) {
-    const char* const* tmp = (const char* const*)&src;
-    unsigned int id = glCreateShader(type);
-    printf("created shader id: %d\n", id);
-    glShaderSource(id, 1, tmp, NULL);
-    glCompileShader(id);
-
-    //glDeleteShader(id);
-    return id;
-}
-
-static unsigned int CreateShader(char* vertexShader, char* fragmentShader) {
-    unsigned int program = glCreateProgram();
-    unsigned int vs = CompileShader(GL_VERTEX_SHADER, vertexShader);
-    unsigned int fs = CompileShader(GL_FRAGMENT_SHADER, fragmentShader);
-
-    glAttachShader(program, vs);
-    glAttachShader(program, fs);
-    glLinkProgram(program);
-    glValidateProgram(program);
-
-    glDeleteShader(vs);
-    glDeleteShader(fs);
-    
-    return program;
-}
 
 int main()
 {
@@ -70,7 +22,7 @@ int main()
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GLFW_TRUE);
 
-    GLFWwindow *window = glfwCreateWindow(720, 480, "test", NULL, NULL);
+    GLFWwindow *window = glfwCreateWindow(720, 480, "window", NULL, NULL);
     if(!window) {
         exit(EXIT_FAILURE);
     }
@@ -94,19 +46,19 @@ int main()
     char* vertexSrc = GetShaderSource("./resources/vertex.shader");
     char* fragSrc = GetShaderSource("./resources/fragment.shader");
 
-    unsigned int shader = CreateShader(vertexSrc, fragSrc);
-    glUseProgram(shader);
+    ShaderProgram sh;
+    CreateShader(&sh, vertexSrc, fragSrc);
+    Bind(&sh);
 
     unsigned int VAO, VBO, EBO;
 
-    glGenVertexArrays(1, &VAO);
-    glGenBuffers(1, &VBO);
-    glGenBuffers(1, &EBO);
+    VertexBuffer vb;
+    GenerateVBO(&vb.m_RendererID, vertices, sizeof(vertices));
 
+    glGenVertexArrays(1, &VAO);
+    glGenBuffers(1, &EBO);
     glBindVertexArray(VAO);
 
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
@@ -127,18 +79,18 @@ int main()
             break;
         }
 
-        glUniform1f(glGetUniformLocation(shader, "x_dir"), x_dir);
-        glUniform1f(glGetUniformLocation(shader, "y_dir"), y_dir);
+        glUniform1f(glGetUniformLocation(sh.m_programID, "x_dir"), x_dir);
+        glUniform1f(glGetUniformLocation(sh.m_programID, "y_dir"), y_dir);
 
         // draw
-        glBindVertexArray(VAO);
+        glBindVertexArray(vb.m_RendererID);
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
 
-    glDeleteProgram(shader);
+    glDeleteProgram(sh.m_programID);
 
     glfwTerminate();
     return 0;
